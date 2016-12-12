@@ -1,0 +1,32 @@
+#!/bin/bash
+
+export LD_LIBRARY_PATH=/usr/lib/oracle/11.2/client64/lib:$LD_LIBRARY_PATH
+export TNS_ADMIN=/somefolder/
+export NLS_LANG=RUSSIAN_CIS.CL8MSWIN1251
+
+cd /somefolder/list/
+
+adressat=''
+thema='Connection error'
+logfile='list.log'
+
+sh db1 &> /dev/null
+
+echo -n "" > list.temp
+for f in $(find list_* -maxdepth 0 -type f 2> /dev/null)
+do
+    if [ $(cat $f | grep "ERROR" | wc -l ) -eq 0 ]
+    then
+        cat $f | sed '/^$/d' | sed 's/SQL> //g' | sed 's/\ \{1,\}//g' >> list.temp
+    	rm -f $f 2> /dev/null
+    else
+	echo -n "No connection with $(echo $f | sed 's/list_//' | sed 's/.list//') " >> $logfile; date +%d/%m/%y-%T >> $logfile; echo "" >> $logfile
+	echo "No conection with $(echo $f | sed 's/list_//' | sed 's/.list//')" | mail -s "$thema" "$adressat"  -f "mail@mail"
+    fi
+done
+
+temp=$(cat list.temp | sort)
+echo "$temp" > list.temp
+mv list.temp list.list
+
+exit 0

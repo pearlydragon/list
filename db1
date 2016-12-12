@@ -1,0 +1,10 @@
+#!/bin/bash
+
+sqlplus64 sys/manager@db as sysdba << EOF
+set pagesize 0;
+spool list_db REP;
+select module from v\$session WHERE status<>'KILLED' order by module;
+spool off;
+EOF;
+
+exit 0
